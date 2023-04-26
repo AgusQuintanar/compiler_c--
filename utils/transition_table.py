@@ -33,6 +33,9 @@ class ErrorState(StateBase):
     @property
     def is_error(self) -> bool:
         return True
+    
+class TransitionState(StateBase):
+    ...
 
 
 
