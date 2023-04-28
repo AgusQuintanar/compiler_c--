@@ -15,7 +15,7 @@ TRANSITION_VECTOR = OrderedDict(
                 + [chr(i) for i in range(ord("A"), ord("Z") + 1)]
             ),
         ],
-        ["DIGIT", lambda x: x in set(range(10))],
+        ["DIGIT", lambda x: x in set([str(_) for _ in range(10)])],
         ["+", lambda x: x == "+"],
         ["-", lambda x: x == "-"],
         ["*", lambda x: x == "*"],
@@ -32,8 +32,10 @@ TRANSITION_VECTOR = OrderedDict(
         ["]", lambda x: x == "]"],
         ["{", lambda x: x == "{"],
         ["}", lambda x: x == "}"],
+        ["<", lambda x: x == "<"],
+        [">", lambda x: x == ">"],
         ["BLANK", lambda x: x in set([" ", "\t", "\n"])],
-        ["EOF", lambda x: x == ""],  # TODO check if this is correct
+        ["EOF", lambda x: x == "\0"],
         ["RARE", lambda _x: True],
     ]
 )
@@ -63,7 +65,9 @@ class StateType(str, Enum):
 
 
 class StateBase(metaclass=ABCMeta):
-    def __init__(self, _id: int, input_char_vector: InputCharVector, output=None) -> None:
+    def __init__(
+        self, _id: int, input_char_vector: InputCharVector, output=None
+    ) -> None:
         self._id = _id
         self.input_char_vector = input_char_vector
         self.output = output
@@ -88,17 +92,22 @@ class StateBase(metaclass=ABCMeta):
         for key, value in self.input_char_vector.items():
             _d[key] = value
         return _d
-    
+
     def can_advance(self) -> bool:
         return True
-    
+
     def __str__(self) -> str:
         return str(self.to_dict())
-    
+
     def get_next_node_index(self, char: str) -> Optional[int]:
-        for input_char, is_input_char in self.input_char_vector.transition_vector.items():
+        for (
+            input_char,
+            is_input_char,
+        ) in self.input_char_vector.transition_vector.items():
             if is_input_char(char):
-                return self.input_char_vector[input_char]   
+                return self.input_char_vector[input_char]
+
+
 class AcceptingState(StateBase):
     @property
     def is_accepting(self) -> bool:
@@ -107,7 +116,7 @@ class AcceptingState(StateBase):
     @property
     def is_error(self) -> bool:
         return False
-    
+
     @property
     def type(self) -> StateType:
         return StateType.ACCEPTING
@@ -126,6 +135,7 @@ class ErrorState(StateBase):
     def type(self) -> StateType:
         return StateType.ERROR
 
+
 class TransitionState(StateBase):
     @property
     def is_accepting(self) -> bool:
@@ -135,9 +145,13 @@ class TransitionState(StateBase):
     def is_error(self) -> bool:
         return False
     
+    def can_advance(self) -> bool:
+        return False
+
     @property
     def type(self) -> StateType:
         return StateType.TRANSITION
+
 
 class TransitionTable:
     def __init__(self, states: List[StateBase]) -> None:
@@ -173,7 +187,7 @@ class TransitionTable:
             state = TransitionState(state_id, input_char_vector, output)
         else:
             raise ValueError(f"Invalid state type: {state_type}")
-        
+
         return state
 
     def add_state(self, state_type: StateType, state_id: int, output=None) -> None:
@@ -185,7 +199,7 @@ class TransitionTable:
             if state._id == 0:
                 return state
         raise ValueError("No initial state found")
-    
+
     def get_state(self, state_id: int) -> StateBase:
         for state in self.states:
             if state._id == state_id:
@@ -203,7 +217,11 @@ class TransitionTable:
         return cls.from_dataframe(dataframe)
 
     def __str__(self):
-        return tabulate([state.to_dict() for state in self.states], headers="keys", tablefmt="fancy_grid")
+        return tabulate(
+            [state.to_dict() for state in self.states],
+            headers="keys",
+            tablefmt="fancy_grid",
+        )
 
 
 transiton_table = TransitionTable.from_excel("transition_table.xlsx")

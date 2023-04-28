@@ -1,12 +1,14 @@
 from utils.transition_table import TransitionTable
 class TransitionTableScanner:
-    def __init__(self, transition_table: TransitionTable) -> None:
+    def __init__(self, transition_table: TransitionTable, file_path: str) -> None:
         self.transition_table = transition_table
-        self.text = "hola como"
+        with open(file_path, "r") as file:
+            self.text = file.read()+"\0"
+
         self._last_index = 0
 
     def _process(self, start_ch_index: int) -> None:
-        """
+        """   s
         state = 0; /* start */
         ch = next input character;
         while (!Accept[state] && !Error[state] ) {
@@ -23,12 +25,13 @@ class TransitionTableScanner:
         state = self.transition_table.get_initial_state()
         n = len(self.text)
         ch_index = start_ch_index
-        print(f"Started with {self.text[ch_index]}")
         while ch_index < n and not (state.is_accepting or state.is_error):
             ch = self.text[ch_index]
+            print(f"ch: {ch}")
             new_state_id = state.get_next_node_index(ch)
+            print(f"new_state_id: {new_state_id}")
             new_state = self.transition_table.get_state(new_state_id)
-            if state.can_advance(): # TODO investigate this
+            if True:
                 ch_index += 1
             state = new_state
 
@@ -39,6 +42,7 @@ class TransitionTableScanner:
         else:
             print("error")
         
+        print("-"*10)
         self._last_index = ch_index
 
     
@@ -51,5 +55,5 @@ class TransitionTableScanner:
 
 if __name__ == "__main__":
     transion_table = TransitionTable.from_excel("transition_table.xlsx")
-    scanner = TransitionTableScanner(transion_table)
+    scanner = TransitionTableScanner(transion_table, file_path="tests/test3.c--")
     scanner.process()
