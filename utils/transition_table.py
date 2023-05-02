@@ -94,7 +94,7 @@ class StateBase(metaclass=ABCMeta):
         return _d
 
     def can_advance(self) -> bool:
-        return True
+        return False
 
     def __str__(self) -> str:
         return str(self.to_dict())
@@ -146,7 +146,7 @@ class TransitionState(StateBase):
         return False
     
     def can_advance(self) -> bool:
-        return False
+        return True
 
     @property
     def type(self) -> StateType:

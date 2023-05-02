@@ -5,6 +5,8 @@ array of floats. Subsequently, the array of
 floats is sorted and display it into standard
 output.*/
 
+47!=5
+
 int x[10];
 string s;
 float f1;
