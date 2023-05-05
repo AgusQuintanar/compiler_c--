@@ -1,15 +1,14 @@
 from dataclasses import dataclass
 from typing import Type, List
-from abc import ABCMeta, abstractproperty
 from tabulate import tabulate
 
 
 class SymbolTableEntry:
     def __init__(self, row: int, lexeme, type: Type) -> None:
-        if not isinstance(lexeme, type):
-            raise TypeError(
-                f"Invalid type for the given lexeme. Expected {type}"
-            )
+        # if not isinstance(lexeme, type):
+        #     raise TypeError(
+        #         f"Invalid type for the given lexeme. Expected {type}"
+        #     )
         
         self.row = row
         self.lexeme = lexeme
@@ -18,13 +17,10 @@ class SymbolTableEntry:
     def to_tuple(self) -> tuple:
         return (self.row, self.lexeme, self.type)
     
-class SymbolTableBase(metaclass=ABCMeta):
-    @abstractproperty
-    def type(self) -> Type:
-        ...
-
-    def __init__(self) -> None:
+class SymbolTable:
+    def __init__(self, type: Type) -> None:
         self.entries: List[SymbolTableEntry] = []
+        self.type = type
 
     def __str__(self) -> str:
         return tabulate(
@@ -41,23 +37,3 @@ class SymbolTableBase(metaclass=ABCMeta):
         )
         self.entries.append(new_entry)
 
-
-    
-
-class IntegerSymbolTable(SymbolTableBase):
-    @property
-    def type(self) -> Type:
-        return int
-
-class StringSymbolTable(SymbolTableBase):
-    @property
-    def type(self) -> Type:
-        return str
-
-
-a = IntegerSymbolTable()
-a.add_entry(
-    3
-)
-a.add_entry(45)
-print(a)

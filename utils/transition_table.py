@@ -4,18 +4,12 @@ import pandas as pd
 from enum import Enum
 from collections import OrderedDict
 from tabulate import tabulate
+from constants import azAZ, DIGITS, EOF, BLANK_DELIMITERS
 
 TRANSITION_VECTOR = OrderedDict(
     [
-        [
-            "LETTER",
-            lambda x: x
-            in set(
-                [chr(i) for i in range(ord("a"), ord("z") + 1)]
-                + [chr(i) for i in range(ord("A"), ord("Z") + 1)]
-            ),
-        ],
-        ["DIGIT", lambda x: x in set([str(_) for _ in range(10)])],
+        ["LETTER", lambda x: x in azAZ],
+        ["DIGIT", lambda x: x in DIGITS],
         ["+", lambda x: x == "+"],
         ["-", lambda x: x == "-"],
         ["*", lambda x: x == "*"],
@@ -34,8 +28,8 @@ TRANSITION_VECTOR = OrderedDict(
         ["}", lambda x: x == "}"],
         ["<", lambda x: x == "<"],
         [">", lambda x: x == ">"],
-        ["BLANK", lambda x: x in set([" ", "\t", "\n"])],
-        ["EOF", lambda x: x == "\0"],
+        ["BLANK", lambda x: x in BLANK_DELIMITERS],
+        ["EOF", lambda x: x == EOF],
         ["RARE", lambda _x: True],
     ]
 )
@@ -55,7 +49,8 @@ class InputCharVector(OrderedDict):
         self, input_chars: Dict[str, Optional[int]], transion_vector: OrderedDict
     ) -> None:
         if sorted(input_chars.keys()) != sorted(transion_vector.keys()):
-            raise ValueError("Input chars and transition vector are not compatible")
+            raise ValueError(
+                "Input chars and transition vector are not compatible")
 
 
 class StateType(str, Enum):
@@ -144,7 +139,7 @@ class TransitionState(StateBase):
     @property
     def is_error(self) -> bool:
         return False
-    
+
     def can_advance(self) -> bool:
         return True
 
@@ -156,19 +151,6 @@ class TransitionState(StateBase):
 class TransitionTable:
     def __init__(self, states: List[StateBase]) -> None:
         self.states = states
-
-    @classmethod
-    def from_dataframe(cls, dataframe: pd.DataFrame) -> "TransitionTable":
-        states = []
-        for _, row in dataframe.iterrows():
-            state_type = row.get("_TYPE")
-            state_id = row.get("_STATE_ID")
-            output = row.get("_OUTPUT")
-            input_chars = row.drop(["_TYPE", "_STATE_ID", "_OUTPUT"]).to_dict()
-
-            state = cls.generate_state(cls, state_type, state_id, input_chars, output)
-            states.append(state)
-        return cls(states)
 
     def generate_state(
         self,
@@ -205,6 +187,20 @@ class TransitionTable:
             if state._id == state_id:
                 return state
         raise ValueError(f"No state with id {state_id} found")
+    
+    @classmethod
+    def from_dataframe(cls, dataframe: pd.DataFrame) -> "TransitionTable":
+        states = []
+        for _, row in dataframe.iterrows():
+            state_type = row.get("_TYPE")
+            state_id = row.get("_STATE_ID")
+            output = row.get("_OUTPUT")
+            input_chars = row.drop(["_TYPE", "_STATE_ID", "_OUTPUT"]).to_dict()
+
+            state = cls.generate_state(
+                cls, state_type, state_id, input_chars, output)
+            states.append(state)
+        return cls(states)
 
     @classmethod
     def from_csv(cls, path: str) -> "TransitionTable":
@@ -222,6 +218,3 @@ class TransitionTable:
             headers="keys",
             tablefmt="fancy_grid",
         )
-
-
-transiton_table = TransitionTable.from_excel("transition_table.xlsx")

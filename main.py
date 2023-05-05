@@ -1,14 +1,30 @@
-from utils.transition_table import TransitionTable
+from utils.transition_table import TransitionTable, StateBase
+from utils.symbol_table import SymbolTable
+from utils.constants import IDENTIFIER
+
 class TransitionTableScanner:
     def __init__(self, transition_table: TransitionTable, file_path: str) -> None:
         self.transition_table = transition_table
         with open(file_path, "r") as file:
             self.text = file.read()+"\0"
 
-        self._last_index = 0
+        self.scanner_output = []
+        self.symbol_tables = [
+            SymbolTable(int),
+            SymbolTable(float),
+            SymbolTable(str),
+            SymbolTable(IDENTIFIER)
+        ]
 
-    def _process(self, start_ch_index: int) -> None:
-        """   s
+    def transition(self, state: StateBase, ch: str) -> StateBase:
+        new_state_id = state.get_next_node_index(ch)
+        return self.transition_table.get_state(new_state_id)
+    
+    def record_token(self, token: str, token_type: str) -> None:
+        ...
+
+    def process(self, start_ch_index: int = 0) -> None:
+        """
         state = 0; /* start */
         ch = next input character;
         while (!Accept[state] && !Error[state] ) {
@@ -20,27 +36,23 @@ class TransitionTableScanner:
         if (Accept[state] )
             RecordToken; 
         else
-        error;
+            error;
         """
         n = len(self.text)
         ch_index = start_ch_index
         
         if ch_index >= n:
+            print("DONE")
             return
 
         state = self.transition_table.get_initial_state()
 
-        print(f"receicved inde, {ch_index}")
-        while ch_index < n and not (state.is_accepting or state.is_error):
+        while not (state.is_accepting or state.is_error):
             ch = self.text[ch_index]
-
-            print(f"ch: {ch}")
-            new_state_id = state.get_next_node_index(ch)
-            if new_state_id == 0:
-                return self._process(start_ch_index=ch_index+1)
-
-            print(f"new_state_id: {new_state_id}")
-            new_state = self.transition_table.get_state(new_state_id)
+            new_state = self.transition(state, ch)
+            
+            if new_state._id == 0:
+                return self.process(start_ch_index=ch_index+1)
 
             if state.can_advance():
                 ch_index += 1
@@ -50,23 +62,16 @@ class TransitionTableScanner:
         if state.is_accepting:
             print("Record token")
             print(state.output)
-            if state.output in ["INT", "FLOAT", "IDENTIFIER"]: 
+            if state.output in ["INT", "FLOAT", "IDENTIFIER", "<", ">", "=", "/"]: 
                 ch_index -= 1
             print(f'"{self.text[start_ch_index:ch_index]}"')
         else:
-            print("error")
+            raise Exception(f"Error: {state.output}")
         
-        if ch_index < n:
-            print(ch_index, self.text[ch_index])
         
         print("-"*10)
-        self._process(start_ch_index=ch_index)
+        self.process(start_ch_index=ch_index)
 
-
-    
-    def process(self) -> None:
-        self._process(start_ch_index=0)
-        print("done")
 
 
 if __name__ == "__main__":
