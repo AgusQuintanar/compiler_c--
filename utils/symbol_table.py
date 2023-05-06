@@ -17,6 +17,9 @@ class SymbolTableEntry:
     def to_tuple(self) -> tuple:
         return (self.row, self.lexeme, self.type)
     
+    def __str__(self) -> str:
+        return f"{self.lexeme}, {self.type}"
+    
 class SymbolTable:
     def __init__(self, type: Type) -> None:
         self.entries: List[SymbolTableEntry] = []

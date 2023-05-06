@@ -1,6 +1,8 @@
 from utils.transition_table import TransitionTable, StateBase
 from utils.symbol_table import SymbolTable
 from utils.constants import IDENTIFIER, RESERVED_KEYWORDS, TOKEN_IDS, COMMENT
+from utils.utils import get_token_name, get_token_id
+from tabulate import tabulate
 
 
 class TransitionTableScanner:
@@ -12,9 +14,9 @@ class TransitionTableScanner:
         self.scanner_output = []
         self.symbol_tables = {
             "IDENTIFIER": SymbolTable(IDENTIFIER),
-            "INT": SymbolTable(int),
-            "FLOAT": SymbolTable(float),
-            "STRING": SymbolTable(str),
+            "INT_CONSTANT": SymbolTable(int),
+            "FLOAT_CONSTANT": SymbolTable(float),
+            "STRING_CONSTANT": SymbolTable(str),
             "COMMENT": SymbolTable(COMMENT)
         }
 
@@ -24,15 +26,16 @@ class TransitionTableScanner:
 
     def _get_token_output(self, token: str, token_type: str):
         if token_type == "IDENTIFIER":
-            if token in RESERVED_KEYWORDS:
-                return [TOKEN_IDS[token]]
+            if token.upper() in RESERVED_KEYWORDS:
+                return [get_token_id(token.upper())]
 
-        if token_type in ["INT", "STRING", "COMMENT", "FLOAT", "IDENTIFIER"]:
-            symbol_table_id = TOKEN_IDS[token_type]
-            symbol_table_entry_idx = self.symbol_tables[token_type].add_entry(token)
+        if token_type in ["INT_CONSTANT", "STRING_CONSTANT", "COMMENT", "FLOAT_CONSTANT", "IDENTIFIER"]:
+            symbol_table_id = get_token_id(token_type)
+            symbol_table_entry_idx = self.symbol_tables[token_type].add_entry(
+                token)
             return [symbol_table_id, symbol_table_entry_idx]
 
-        return [TOKEN_IDS[token_type]]
+        return [get_token_id(token_type)]
 
     def record_token(self, token: str, token_type: str) -> None:
         token = self._get_token_output(token, token_type)
@@ -75,7 +78,7 @@ class TransitionTableScanner:
             state = new_state
 
         if state.is_accepting:
-            if state.output in ["INT", "FLOAT", "IDENTIFIER", "<", ">", "=", "/"]:
+            if state.output in ["INT_CONSTANT", "FLOAT_CONSTANT", "IDENTIFIER", "<", ">", "=", "/"]:
                 ch_index -= 1
 
             token = self.text[start_ch_index:ch_index]
@@ -85,17 +88,51 @@ class TransitionTableScanner:
 
         self.process(start_ch_index=ch_index)
 
+    def _get_token_recognition(self, output_entry: list) -> str:
+        if len(output_entry) == 1:
+            return get_token_name(token_id=output_entry[0])
+        elif len(output_entry) == 2:
+            token_id, token_entry_idx = output_entry
+            token_name = get_token_name(token_id)
+            return self.symbol_tables[token_name].entries[token_entry_idx]
+        else:
+            raise Exception("Invalid output entry")
+
+    def print_scanner_output(self):
+        print("Scanner Output:")
+        for output_entry in self.scanner_output:
+            str_entry = ", ".join(
+                [str(entry) for entry in output_entry]
+            )
+            print(f"<{str_entry}>")
+
+    def print_formatted_scanner_output(self):
+        print("Formatted Scanner Output:")
+
+        formatted_output = tabulate(
+            [[output_entry, self._get_token_recognition(
+                output_entry)] for output_entry in self.scanner_output],
+            headers=["Scanner Output", "Token Recognition"],
+            tablefmt="fancy_grid",
+        )
+
+        print(formatted_output)
+
+    def print_symbol_tables(self):
+        for symbol_table_name, symbol_table in self.symbol_tables.items():
+            print(f"Symbol Table: {symbol_table_name}")
+            print(symbol_table)
+            print()
+
 
 if __name__ == "__main__":
     transion_table = TransitionTable.from_excel("transition_table.xlsx")
     scanner = TransitionTableScanner(
-        transion_table, file_path="tests/test2.c--"
+        transion_table, file_path="tests/test1.c--"
     )
     scanner.process()
-
-    print(scanner.scanner_output)
-
-    for symbol_table_name, symbol_table in scanner.symbol_tables.items():
-        print(symbol_table_name)
-        print(symbol_table)
-        print()
+    scanner.print_scanner_output()
+    print("\n\n")
+    scanner.print_formatted_scanner_output()
+    print("\n\n")
+    scanner.print_symbol_tables()

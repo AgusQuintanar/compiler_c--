@@ -7,7 +7,7 @@ output.*/
 
 int x[10];
 string s;
-float f1;
+float f1 = 4.4343;
 float f2[10];
 
 int miniloc(float a[], int low, int high){
