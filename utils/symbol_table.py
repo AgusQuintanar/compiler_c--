@@ -29,11 +29,22 @@ class SymbolTable:
             tablefmt="fancy_grid",
         )
     
-    def add_entry(self, lexeme: type):
+    def add_entry(self, lexeme: type) -> int:
+        """
+        Returns the index of the inserted entry
+        """
+        for i, entry in enumerate(self.entries):
+            # Search for an entry with the same lexeme
+            if entry.lexeme == lexeme:
+                return i
+
         new_entry = SymbolTableEntry(
             row=len(self.entries), 
             lexeme=lexeme, 
             type=self.type
         )
         self.entries.append(new_entry)
+
+        # Return the index of the new entry
+        return len(self.entries) - 1
 

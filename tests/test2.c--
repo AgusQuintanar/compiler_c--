@@ -11,7 +11,9 @@ output.*/
 
 1/3 1a0
 
+45.65
+
 int x[10];
 string s;
 float f1;
-float f2[10];  """
+float f2[10];  "hola" "hola" "si"

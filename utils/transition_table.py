@@ -4,7 +4,7 @@ import pandas as pd
 from enum import Enum
 from collections import OrderedDict
 from tabulate import tabulate
-from constants import azAZ, DIGITS, EOF, BLANK_DELIMITERS
+from .constants import azAZ, DIGITS, EOF, BLANK_DELIMITERS
 
 TRANSITION_VECTOR = OrderedDict(
     [
