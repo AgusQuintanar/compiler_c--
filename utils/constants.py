@@ -1,3 +1,4 @@
+# CUSTOM TYPES
 IDENTIFIER = type('IDENTIFIER', (), {})
 COMMENT = type('COMMENT', (), {})
 

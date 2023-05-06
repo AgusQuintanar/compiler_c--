@@ -15,6 +15,10 @@ class SymbolTableEntry:
         self.type = type
 
     def to_tuple(self) -> tuple:
+        """
+        Returns a tuple with the following format:
+        (row, lexeme, type)
+        """
         return (self.row, self.lexeme, self.type)
     
     def __str__(self) -> str:
@@ -26,6 +30,9 @@ class SymbolTable:
         self.type = type
 
     def __str__(self) -> str:
+        """
+        Outputs the symbol table in a tabular format
+        """
         return tabulate(
             [entry.to_tuple() for entry in self.entries],
             headers=["Entry #", "Lexeme", "Type"],
@@ -34,7 +41,8 @@ class SymbolTable:
     
     def add_entry(self, lexeme: type) -> int:
         """
-        Returns the index of the inserted entry
+        Returns the index of the inserted entry, 
+        or the index of the entry if it already exists
         """
         for i, entry in enumerate(self.entries):
             # Search for an entry with the same lexeme

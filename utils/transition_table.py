@@ -36,6 +36,9 @@ TRANSITION_VECTOR = OrderedDict(
 
 
 class InputCharVector(OrderedDict):
+    """
+    This class is used to represent the input character vector of a state.
+    """
     def __init__(
         self, input_chars: Dict[str, Optional[int]], transion_vector: OrderedDict
     ) -> None:
@@ -60,6 +63,9 @@ class StateType(str, Enum):
 
 
 class StateBase(metaclass=ABCMeta):
+    """
+    Base class for all states in the transition table.
+    """
     def __init__(
         self, _id: int, input_char_vector: InputCharVector, output=None
     ) -> None:
@@ -95,6 +101,10 @@ class StateBase(metaclass=ABCMeta):
         return str(self.to_dict())
 
     def get_next_node_index(self, char: str) -> Optional[int]:
+        """
+        Returns the next node index for the given character.
+        If the character is not in the transition vector, returns None.
+        """
         for (
             input_char,
             is_input_char,
@@ -149,6 +159,9 @@ class TransitionState(StateBase):
 
 
 class TransitionTable:
+    """
+    This class is used to represent the transition table of a DFA.
+    """
     def __init__(self, states: List[StateBase]) -> None:
         self.states = states
 
@@ -159,6 +172,9 @@ class TransitionTable:
         input_chars: Dict[str, Optional[int]],
         output=None,
     ) -> StateBase:
+        """
+        This method is used to generate a state of the transition table.
+        """
         input_char_vector = InputCharVector(input_chars, TRANSITION_VECTOR)
 
         if state_type == StateType.ACCEPTING:
@@ -177,12 +193,18 @@ class TransitionTable:
         self.states.append(state)
 
     def get_initial_state(self) -> StateBase:
+        """
+        Returns the initial state of the transition table.
+        """
         for state in self.states:
             if state._id == 0:
                 return state
         raise ValueError("No initial state found")
 
     def get_state(self, state_id: int) -> StateBase:
+        """
+        Returns the state with the given id. If no state is found, raises a ValueError.
+        """
         for state in self.states:
             if state._id == state_id:
                 return state
@@ -190,6 +212,9 @@ class TransitionTable:
     
     @classmethod
     def from_dataframe(cls, dataframe: pd.DataFrame) -> "TransitionTable":
+        """
+        Class method to generate a transition table from a pandas dataframe.
+        """
         states = []
         for _, row in dataframe.iterrows():
             state_type = row.get("_TYPE")
@@ -204,11 +229,17 @@ class TransitionTable:
 
     @classmethod
     def from_csv(cls, path: str) -> "TransitionTable":
+        """
+        Class method to generate a transition table from a csv file.
+        """
         dataframe = pd.read_csv(path)
         return cls.from_dataframe(dataframe)
 
     @classmethod
     def from_excel(cls, path: str) -> "TransitionTable":
+        """
+        Class method to generate a transition table from an excel file.
+        """
         dataframe = pd.read_excel(path)
         return cls.from_dataframe(dataframe)
 
