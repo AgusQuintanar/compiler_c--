@@ -6,22 +6,20 @@ floats is sorted and display it into standard
 output.*/
 
 int x[10];
-string s;
-float f1 = 4.4343;
-float f2[10];
 
-int miniloc(float a[], int low, int high){
-	int i; float y; int k;
-	k = low;
-	y = a[low];
-	i = low + 1;
-	while (i > high){
-		if (a[i] <= x){
-			y = a[i];
-			k = i;
-		}
-		i = i + 1;
+void writeArray(void){
+	int i;
+	i = 0;
+	while (i < 10){
+	write f2[i];
+	i = i + 1;
 	}
-	return k;
+	return;
 }
 
+void main(void){
+	int a;
+	a = 10;
+
+	return;
+}

@@ -37,6 +37,7 @@
 """
 
 from ..scanner import TokenType
+from ..constants import RESERVED_KEYWORDS
 
 def first_plus(tokens):
     return set(tokens)
@@ -49,7 +50,8 @@ class Grammar:
 
     def match_terminal(self, terminal):
         print(f"Matching terminal: {terminal} with {self.get_current_token()}")
-        if self.get_current_token() == terminal:
+        if self.get_current_token().value == terminal:
+            print("MATCHED\n")
             self.get_next_token()
         else:
             raise Exception("Error in match_terminal")
@@ -57,17 +59,20 @@ class Grammar:
     def match_type(self, token_type):
         print(f"Matching type: {token_type} with {self.get_current_token().type}")
         if self.get_current_token().type == token_type:
+            if token_type == TokenType.IDENTIFIER:
+                if self.get_current_token().value in RESERVED_KEYWORDS:
+                    raise Exception(f"Error in match_type: {self.get_current_token().value} is a reserved keyword")
+            print("MATCHED\n")
             self.get_next_token()
         else:
             raise Exception("Error in match_type")
         
-    
-
+    def is_identifier(self, token):
+        return token.type == TokenType.IDENTIFIER and token.value not in RESERVED_KEYWORDS
+        
         
     def is_type(self, token, type):
-        if token.type == type:
-            return True
-        return False
+        return token.type == type
 
     def error(self, e):
         raise Exception(e)
@@ -89,7 +94,7 @@ class Grammar:
 
     def declaration_list(self):
         print("declaration_list()")
-        if self.get_current_token() in first_plus(['void']):
+        if self.get_current_token().value in first_plus(['void']):
             return
         else:
             self.declaration()
@@ -97,8 +102,8 @@ class Grammar:
 
     def declaration(self):
         print("declaration()")    
-        if self.get_current_token() == 'void':
-            self.match_terminal("void")
+        if self.get_current_token().value == 'void':
+            self.match_terminal("void")                
             self.match_type(TokenType.IDENTIFIER)
             self.match_terminal("(")
             self.params()
@@ -110,7 +115,7 @@ class Grammar:
         else:
             self.var_specifier()
             self.match_type(TokenType.IDENTIFIER)
-            if self.get_current_token() == "(":
+            if self.get_current_token().value == "(":
                 self.match_terminal("(")
                 self.params()
                 self.match_terminal(")")
@@ -123,11 +128,11 @@ class Grammar:
 
     def var_declaration_prime(self):
         print("var_declaration_prime()")
-        if self.get_current_token() == ";":
+        if self.get_current_token().value == ";":
             self.match_terminal(";")
-        elif self.get_current_token() == "[":
+        elif self.get_current_token().value == "[":
             self.match_terminal("[")
-            self.match_terminal("int")
+            self.match_type(TokenType.INT)
             self.match_terminal("]")
             self.match_terminal(";")
         else:
@@ -135,25 +140,25 @@ class Grammar:
 
     def var_specifier(self):
         print("var_specifier()")
-        if self.get_current_token() == "int":
+        if self.get_current_token().value == "int":
             self.match_terminal("int")
-        elif self.get_current_token() == "float":
+        elif self.get_current_token().value == "float":
             self.match_terminal("float")
-        elif self.get_current_token() == "string":
+        elif self.get_current_token().value == "string":
             self.match_terminal("string")
         else:
             self.error("Error in var_specifier")
         
     def fun_specifier(self):
         print("fun_specifier()")
-        if self.get_current_token() == "void":
+        if self.get_current_token().value == "void":
             self.match_terminal("void")
         else:
             self.var_specifier()
 
     def params(self):
         print("params()")
-        if self.get_current_token() == "void":
+        if self.get_current_token().value == "void":
             self.match_terminal("void")
         else:
             self.var_specifier()
@@ -163,32 +168,33 @@ class Grammar:
 
     def param_list_prime(self):
         print("param_list_prime()")
-        if self.get_current_token() == ",":
+        if self.get_current_token().value == ",":
             self.match_terminal(",")
             self.var_specifier()
             self.match_type(TokenType.IDENTIFIER)
             self.param_prime()
             self.param_list_prime()
-        elif self.get_current_token() in first_plus([')']):
+        elif self.get_current_token().value in first_plus([')']):
             return
         else:
             self.error("Error in param_list_prime")
 
     def param_prime(self):
         print("param_prime()")
-        if self.get_current_token() == "[":
+        if self.get_current_token().value == "[":
             self.match_terminal("[")
             self.match_terminal("]")
-        elif self.get_current_token() in first_plus([',', ')']):
+        elif self.get_current_token().value in first_plus([',', ')']):
             return
         else:
             self.error("Error in param_prime")
 
     def local_declarations(self):
         print("local_declarations()")
-        if self.get_current_token() in first_plus(['{', 'if', 'while', 'return', 'read', 'write', '}']):
+        if self.get_current_token().value in first_plus(['{', 'if', 'while', 'return', 'read', 'write', '}']):
             return
-        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER):
+        # First plus
+        elif self.is_identifier(self.get_current_token()):
             return
         self.var_specifier()
         self.match_type(TokenType.IDENTIFIER)
@@ -197,22 +203,19 @@ class Grammar:
 
     def statement_list(self):
         print("statement_list()")
-        if self.get_current_token() in first_plus(['return', '{']):
+        if self.get_current_token().value in first_plus(['return', '}']):
             return
         self.statement()
         self.statement_list()
 
     def statement(self):
         print("statement()")
-        if self.get_current_token() == "ID":
-            self.match_type(TokenType.IDENTIFIER)
-            self.statement_prime()
-        elif self.get_current_token() == "{":
+        if self.get_current_token().value == "{":
             self.match_terminal("{")
             self.local_declarations()
             self.statement_list()
             self.match_terminal("}")
-        elif self.get_current_token() == "if":
+        elif self.get_current_token().value == "if":
             self.match_terminal("if")
             self.match_terminal("(")
             self.factor()
@@ -222,7 +225,7 @@ class Grammar:
             self.match_terminal(")")
             self.statement()
             self.selection_stmt_prime()
-        elif self.get_current_token() == "while":
+        elif self.get_current_token().value == "while":
             self.match_terminal("while")
             self.match_terminal("(")
             self.factor()
@@ -231,27 +234,30 @@ class Grammar:
             self.expression_prime()
             self.match_terminal(")")
             self.statement()
-        elif self.get_current_token() == "return":
+        elif self.get_current_token().value == "return":
             self.match_terminal("return")
             self.return_stmt_prime()
-        elif self.get_current_token() == "read":
+        elif self.get_current_token().value == "read":
             self.match_terminal("read")
             self.match_type(TokenType.IDENTIFIER)
             self.var_prime()
             self.match_terminal(";")
-        elif self.get_current_token() == "write":
+        elif self.get_current_token().value == "write":
             self.match_terminal("write")
             self.factor()
             self.term_prime()
             self.arithmetic_expression_prime()
             self.expression_prime()
             self.match_terminal(";")
+        elif self.is_identifier(self.get_current_token()):
+            self.match_type(TokenType.IDENTIFIER)
+            self.statement_prime()
         else:
             self.error("Error in statement")
 
     def statement_prime(self):
         print("statement_prime()")
-        if self.is_type(self.get_current_token(), TokenType.IDENTIFIER):
+        if self.is_identifier(self.get_current_token()):
             self.match_type(TokenType.IDENTIFIER)
             self.match_terminal("(")
             self.args()
@@ -276,19 +282,19 @@ class Grammar:
 
     def selection_stmt_prime(self):
         print("selection_stmt_prime()")
-        if self.get_current_token() == "else":
+        if self.get_current_token().value == "else":
             self.match_terminal("else")
             self.statement()
-        elif self.get_current_token() in first_plus(['{', 'if', 'while', 'return', 'read', 'write']):
+        elif self.get_current_token().value in first_plus(['{', '}', 'if', 'while', 'return', 'read', 'write']):
             return
-        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER):
+        elif self.is_identifier(self.get_current_token()): # First plus
             return
         else:
             self.error("Error in selection_stmt_prime")
 
     def return_stmt_prime(self):
         print("return_stmt_prime()")
-        if self.get_current_token() == ";":
+        if self.get_current_token().value == ";":
             self.match_terminal(";")
         else:
             self.factor()
@@ -311,23 +317,25 @@ class Grammar:
 
     def var_prime(self):
         print("var_prime()")
-        if self.get_current_token() == "[":
+        if self.get_current_token().value == "[":
             self.match_terminal("[")
             self.factor()
             self.term_prime()
             self.arithmetic_expression_prime()
             self.expression_prime()
             self.match_terminal("]")
-        elif self.get_current_token() in first_plus(['=', ';', '(', ')', ',', '+', '-', '*', '/', '<', '<=', '>', '>=', '==', '!=', ']']):
+        elif self.get_current_token().value in first_plus(['=', ';', '(', ')', ',', '+', '-', '*', '/', '<', '<=', '>', '>=', '==', '!=', ']']):
             return
-        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER, TokenType.INT, TokenType.FLOAT):
+        elif self.get_current_token().type in first_plus(TokenType.INT, TokenType.FLOAT):
+            return
+        elif self.is_identifier(self.get_current_token()):
             return
         else:
             self.error("Error in var_prime")
 
     def expression_prime(self):
         print("expression_prime()")
-        if self.get_current_token() in first_plus([';', ')']):
+        if self.get_current_token().value in first_plus([';', ')']):
             return
         self.relop()
         self.factor()
@@ -336,26 +344,28 @@ class Grammar:
 
     def relop(self):
         print("relop()")
-        if self.get_current_token() == "<":
+        if self.get_current_token().value == "<":
             self.match_terminal("<")
-        elif self.get_current_token() == "<=":
+        elif self.get_current_token().value == "<=":
             self.match_terminal("<=")
-        elif self.get_current_token() == ">":
+        elif self.get_current_token().value == ">":
             self.match_terminal(">")
-        elif self.get_current_token() == ">=":
+        elif self.get_current_token().value == ">=":
             self.match_terminal(">=")
-        elif self.get_current_token() == "==":
+        elif self.get_current_token().value == "==":
             self.match_terminal("==")
-        elif self.get_current_token() == "!=":
+        elif self.get_current_token().value == "!=":
             self.match_terminal("!=")
         else:
             self.error("Error in relop")
 
     def arithmetic_expression_prime(self):
         print("arithmetic_expression_prime()")
-        if self.get_current_token() in first_plus(['=', ';', '(', ')', ',', '*', '/', '<', '<=', '>', '>=', '==', '!=', ']']):
+        if self.get_current_token().value in first_plus(['=', ';', '(', ')', ',', '*', '/', '<', '<=', '>', '>=', '==', '!=', ']']):
             return
-        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER, TokenType.INT, TokenType.FLOAT):
+        elif self.get_current_token().type in first_plus(TokenType.INT, TokenType.FLOAT):
+            return
+        elif self.is_identifier(self.get_current_token()):
             return
         
         self.addop()
@@ -365,22 +375,22 @@ class Grammar:
 
     def addop(self):
         print("addop()")
-        if self.get_current_token() == "+":
+        if self.get_current_token().value == "+":
             self.match_terminal("+")
-        elif self.get_current_token() == "-":
+        elif self.get_current_token().value == "-":
             self.match_terminal("-")
         else:
             self.error("Error in addop")
 
     def factor(self):
         print("factor()")
-        if self.get_current_token() == "(":
+        if self.get_current_token().value == "(":
             self.match_terminal("(")
             self.factor()
             self.term_prime()
             self.arithmetic_expression_prime()
             self.match_terminal(")")
-        elif self.is_type(self.get_current_token(), TokenType.IDENTIFIER):
+        elif self.is_identifier(self.get_current_token()):
             self.match_type(TokenType.IDENTIFIER)
             self.factor_prime()
         elif self.is_type(self.get_current_token(), TokenType.INT):
@@ -392,7 +402,7 @@ class Grammar:
     
     def factor_prime(self):
         print("factor_prime()")
-        if self.is_type(self.get_current_token(), TokenType.IDENTIFIER):
+        if self.is_identifier(self.get_current_token()):
             self.match_type(TokenType.IDENTIFIER)
             self.match_terminal("(")
             self.args()
@@ -403,9 +413,11 @@ class Grammar:
     
     def term_prime(self):
         print("term_prime()")
-        if self.get_current_token() in first_plus(['=', ';', '(', ')', ',', '+', '-', '<', '<=', '>', '>=', '==', '!=', ']']):
+        if self.get_current_token().value in first_plus(['=', ';', '(', ')', ',', '+', '-', '<', '<=', '>', '>=', '==', '!=', ']']):
             return
-        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER, TokenType.INT, TokenType.FLOAT):
+        elif self.get_current_token().type in first_plus(TokenType.INT, TokenType.FLOAT):
+            return
+        elif self.is_identifier(self.get_current_token()):
             return
         self.mulop()
         self.factor()
@@ -414,16 +426,16 @@ class Grammar:
 
     def mulop(self):
         print("mulop()")
-        if self.get_current_token() == "*":
+        if self.get_current_token().value == "*":
             self.match_terminal("*")
-        elif self.get_current_token() == "/":
+        elif self.get_current_token().value == "/":
             self.match_terminal("/")
         else:
             self.error("Error in mulop")
 
     def args(self):
         print("args()")
-        if self.get_current_token() in first_plus([')']):
+        if self.get_current_token().value in first_plus([')']):
             return
         self.factor()
         self.term_prime()
@@ -432,13 +444,13 @@ class Grammar:
 
     def args_list_prime(self):
         print("args_list_prime()")
-        if self.get_current_token() == ",":
+        if self.get_current_token().value == ",":
             self.match_terminal(",")
             self.factor()
             self.term_prime()
             self.arithmetic_expression_prime()
             self.args_list_prime()
-        elif self.get_current_token() in first_plus([')']):
+        elif self.get_current_token().value in first_plus([')']):
             return
         else:
             self.error("Error in args_list_prime")

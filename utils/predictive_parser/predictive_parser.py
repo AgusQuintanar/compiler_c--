@@ -14,7 +14,7 @@ class PredictiveParser:
         return self.tokens[self.current_token]
 
     def get_current_token(self):
-        print(f"Current token: {self.tokens[self.current_token]}")
+        # print(f"Current token: {self.tokens[self.current_token]}")
         return self.tokens[self.current_token]
 
     def add_token(self, token):
@@ -22,14 +22,17 @@ class PredictiveParser:
 
     def parse(self):
         # current_token = self.tokens[self.current_token]
-        self.add_token(Token("$", TokenType.TERMINAL))
+        self.add_token(Token(value="$", type=TokenType.TERMINAL))
+
+        for token in self.tokens:
+            print(token)
         grammar = Grammar(
             get_current_token=self.get_current_token,
             get_next_token=self.get_next_token,
         )
         grammar.program()
 
-        if self.get_current_token() == "$":
+        if self.get_current_token().value == "$":
             print("Success")
         else:
             print("Error")
