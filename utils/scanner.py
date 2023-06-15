@@ -1,22 +1,52 @@
 from utils.transition_table import TransitionTable, StateBase
 from utils.symbol_table import SymbolTable
-from utils.constants import IDENTIFIER, RESERVED_KEYWORDS, COMMENT
+from utils.constants import RESERVED_KEYWORDS
 from utils.utils import get_token_name, get_token_id
 from tabulate import tabulate
+from enum import Enum
+from typing import List
+
+
+class TokenType(Enum):
+    IDENTIFIER = 1
+    INT = 2
+    FLOAT = 3
+    STRING = 4
+    COMMENT = 5
+    TERMINAL = 6
+
+
+class Token:
+    def __init__(self, output_entry: list, symbol_tables) -> None:
+        if len(output_entry) == 1:
+            self.value = get_token_name(token_id=output_entry[0])
+            self.type = TokenType.TERMINAL
+        elif len(output_entry) == 2:
+            token_id, token_entry_idx = output_entry
+            token_name = get_token_name(token_id)
+            entry = symbol_tables[token_name].entries[token_entry_idx]
+            self.value = entry.lexeme
+            self.type = entry.type
+        else:
+            raise Exception("Invalid output entry")
+        
+    def __str__(self) -> str:
+        return f"{self.value}, {self.type}"
+
 
 class TransitionTableScanner:
     def __init__(self, transition_table: TransitionTable, file_path: str) -> None:
         self.transition_table = transition_table
         with open(file_path, "r") as file:
-            self.text = file.read()+"\0"
+            self.text = file.read() + "\0"
 
         self.scanner_output = []
         self.symbol_tables = {
-            "IDENTIFIER": SymbolTable(IDENTIFIER),
-            "INT_CONSTANT": SymbolTable(int),
-            "FLOAT_CONSTANT": SymbolTable(float),
-            "STRING_CONSTANT": SymbolTable(str),
-            "COMMENT": SymbolTable(COMMENT)
+            "IDENTIFIER": SymbolTable(TokenType.IDENTIFIER),
+            "INT_CONSTANT": SymbolTable(TokenType.INT),
+            "FLOAT_CONSTANT": SymbolTable(TokenType.FLOAT),
+            "STRING_CONSTANT": SymbolTable(TokenType.STRING),
+            "COMMENT": SymbolTable(TokenType.COMMENT),
         }
 
     def transition(self, state: StateBase, ch: str) -> StateBase:
@@ -31,13 +61,18 @@ class TransitionTableScanner:
         Returns the output of the token based on the token type.
         """
         if token_type == "IDENTIFIER":
-            if token.upper() in RESERVED_KEYWORDS:
-                return [get_token_id(token.upper())]
+            if token in RESERVED_KEYWORDS:
+                return [get_token_id(token)]
 
-        if token_type in ["INT_CONSTANT", "STRING_CONSTANT", "COMMENT", "FLOAT_CONSTANT", "IDENTIFIER"]:
+        if token_type in [
+            "INT_CONSTANT",
+            "STRING_CONSTANT",
+            "COMMENT",
+            "FLOAT_CONSTANT",
+            "IDENTIFIER",
+        ]:
             symbol_table_id = get_token_id(token_type)
-            symbol_table_entry_idx = self.symbol_tables[token_type].add_entry(
-                token)
+            symbol_table_entry_idx = self.symbol_tables[token_type].add_entry(token)
             return [symbol_table_id, symbol_table_entry_idx]
 
         return [get_token_id(token_type)]
@@ -57,13 +92,13 @@ class TransitionTableScanner:
             state = 0; /* start */
             ch = next input character;
             while (!Accept[state] && !Error[state] ) {
-                newState = T[state, ch]; 
+                newState = T[state, ch];
                 if (Advance[state, ch])
                     ch = next input character ;
                 state = newState;
-            } /* end while */ 
+            } /* end while */
             if (Accept[state] )
-                RecordToken; 
+                RecordToken;
             else
                 error;
         """
@@ -81,7 +116,7 @@ class TransitionTableScanner:
             new_state = self.transition(state, ch)
 
             if new_state._id == 0:
-                return self.process(start_ch_index=ch_index+1)
+                return self.process(start_ch_index=ch_index + 1)
 
             if state.can_advance():
                 ch_index += 1
@@ -89,9 +124,17 @@ class TransitionTableScanner:
             state = new_state
 
         if state.is_accepting:
-            # If the output is in the following list, we need to go back one character, 
+            # If the output is in the following list, we need to go back one character,
             # to make sure that the next token is not affected
-            if state.output in ["INT_CONSTANT", "FLOAT_CONSTANT", "IDENTIFIER", "<", ">", "=", "/"]:
+            if state.output in [
+                "INT_CONSTANT",
+                "FLOAT_CONSTANT",
+                "IDENTIFIER",
+                "<",
+                ">",
+                "=",
+                "/",
+            ]:
                 ch_index -= 1
 
             token = self.text[start_ch_index:ch_index]
@@ -121,9 +164,7 @@ class TransitionTableScanner:
         """
         print("Scanner Output:")
         for output_entry in self.scanner_output:
-            str_entry = ", ".join(
-                [str(entry) for entry in output_entry]
-            )
+            str_entry = ", ".join([str(entry) for entry in output_entry])
             print(f"<{str_entry}>")
 
     def print_formatted_scanner_output(self):
@@ -139,8 +180,10 @@ class TransitionTableScanner:
         print("Formatted Scanner Output:")
 
         formatted_output = tabulate(
-            [[output_entry, self._get_token_recognition(
-                output_entry)] for output_entry in self.scanner_output],
+            [
+                [output_entry, Token(output_entry, self.symbol_tables)]
+                for output_entry in self.scanner_output
+            ],
             headers=["Scanner Output", "Token Recognition"],
             tablefmt="fancy_grid",
         )
@@ -155,3 +198,9 @@ class TransitionTableScanner:
             print(f"Symbol Table: {symbol_table_name}")
             print(symbol_table)
             print()
+
+    def get_tokens(self) -> List[Token]:
+        """
+        Returns the tokens generated by the scanner.
+        """
+        return [Token(output_entry, self.symbol_tables) for output_entry in self.scanner_output]

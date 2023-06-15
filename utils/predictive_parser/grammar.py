@@ -36,342 +36,409 @@
 28. args_list' = , factor term' arithmetic_expression' args_list' | Ɛ
 """
 
-from enum import Enum
+from ..scanner import TokenType
 
-def match_terminal(terminal):
-    ...
-
-def match_type(type):
-    ...
-
-class TokenType(Enum):
-    IDENTIFIER = 1
-    INT = 2
-    FLOAT = 3
-    STRING = 4
+def first_plus(tokens):
+    return set(tokens)
 
 
-current_token = "a"
+class Grammar:
+    def __init__(self, get_current_token, get_next_token):
+        self.get_current_token = get_current_token
+        self.get_next_token = get_next_token
 
-def get_next_token():
-    global current_token
-    return current_token
-
-
-
-def is_type(token, type: TokenType):
-    if token.type == type:
-        return True
-    return False
-
-
-
-def program():
-    declaration_list()
-    match_terminal("void")
-    match_type(TokenType.IDENTIFIER)
-    match_terminal("(")
-    match_terminal("void")
-    match_terminal(")")
-    match_terminal("{")
-    local_declarations()
-    statement_list()
-    match_terminal("return")
-    match_terminal(";")
-    match_terminal("}")
-
-def declaration_list():
-    declaration()
-    declaration_list()
-
-def error(e):
-    print(e)
-
-def declaration():
-    if current_token == 'void':
-        match_terminal("void")
-        match_type(TokenType.IDENTIFIER)
-        match_terminal("(")
-        params()
-        match_terminal(")")
-        match_terminal("{")
-        local_declarations()
-        statement_list()
-        match_terminal("}")
-    else:
-        var_specifier()
-        match_type(TokenType.IDENTIFIER)
-        if current_token == "(":
-            match_terminal("(")
-            params()
-            match_terminal(")")
-            match_terminal("{")
-            local_declarations()
-            statement_list()
-            match_terminal("}")
+    def match_terminal(self, terminal):
+        print(f"Matching terminal: {terminal} with {self.get_current_token()}")
+        if self.get_current_token() == terminal:
+            self.get_next_token()
         else:
-             var_declaration_prime()
+            raise Exception("Error in match_terminal")
 
-def var_declaration_prime():
-    if current_token == ";":
-        match_terminal(";")
-    elif current_token == "[":
-        match_terminal("[")
-        match_terminal("int")
-        match_terminal("]")
-        match_terminal(";")
-    else:
-        error("Error in var_declaration_prime")
-
-def var_specifier():
-    if current_token == "int":
-        match_terminal("int")
-    elif current_token == "float":
-        match_terminal("float")
-    elif current_token == "string":
-        match_terminal("string")
-    else:
-        error("Error in var_specifier")
+    def match_type(self, token_type):
+        print(f"Matching type: {token_type} with {self.get_current_token().type}")
+        if self.get_current_token().type == token_type:
+            self.get_next_token()
+        else:
+            raise Exception("Error in match_type")
         
-def fun_specifier():
-    if current_token == "void":
-        match_terminal("void")
-    else:
-        var_specifier()
-
-def params():
-    if current_token == "void":
-        match_terminal("void")
-    else:
-        var_specifier()
-        match_type(TokenType.IDENTIFIER)
-        param_prime()
-        param_list_prime()
-
-def param_list_prime():
-    if current_token == ",":
-        match_terminal(",")
-        var_specifier()
-        match_type(TokenType.IDENTIFIER)
-        param_prime()
-        param_list_prime()
-    else:
-        error("Error in param_list_prime")
-
-def param_prime():
-    if current_token == "[":
-        match_terminal("[")
-        match_terminal("]")
-    else:
-        error("Error in param_prime")
-
-def local_declarations():
-    var_specifier()
-    match_type(TokenType.IDENTIFIER)
-    var_declaration_prime()
-    local_declarations()
-
-def statement_list():
-    statement()
-    statement_list()
-
-def statement():
-    if current_token == "ID":
-        match_type(TokenType.IDENTIFIER)
-        statement_prime()
-    elif current_token == "{":
-        match_terminal("{")
-        local_declarations()
-        statement_list()
-        match_terminal("}")
-    elif current_token == "if":
-        match_terminal("if")
-        match_terminal("(")
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal(")")
-        statement()
-        selection_stmt_prime()
-    elif current_token == "while":
-        match_terminal("while")
-        match_terminal("(")
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal(")")
-        statement()
-    elif current_token == "return":
-        match_terminal("return")
-        return_stmt_prime()
-    elif current_token == "read":
-        match_terminal("read")
-        match_type(TokenType.IDENTIFIER)
-        var_prime()
-        match_terminal(";")
-    elif current_token == "write":
-        match_terminal("write")
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal(";")
-    else:
-        error("Error in statement")
-
-def statement_prime():
-    if is_type(current_token, TokenType.IDENTIFIER):
-        match_type(TokenType.IDENTIFIER)
-        match_terminal("(")
-        args()
-        match_terminal(")")
-        match_terminal(";")
-    else:
-        var_prime()
-        match_terminal("=")
-        assignment_stmt_prime()
-
-def assignment_stmt_prime():
-    if is_type(current_token, TokenType.STRING):
-        match_type(TokenType.STRING)
-        match_terminal(";")
-    else:
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal(";")
-
-def selection_stmt_prime():
-    if current_token == "else":
-        match_terminal("else")
-        statement()
-    else:
-        error("Error in selection_stmt_prime")
-
-def return_stmt_prime():
-    if current_token == ";":
-        match_terminal(";")
-    else:
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal(";")
-
-def output_stmt_prime():
-    if is_type(current_token, TokenType.STRING):
-        match_type(TokenType.STRING)
-        match_terminal(";")
-    else:
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal(";")
-
-def var_prime():
-    if current_token == "[":
-        match_terminal("[")
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        expression_prime()
-        match_terminal("]")
-    else:
-        error("Error in var_prime")
-
-def expression_prime():
-    relop()
-    factor()
-    term_prime()
-    arithmetic_expression_prime()
-
-def relop():
-    if current_token == "<":
-        match_terminal("<")
-    elif current_token == "<=":
-        match_terminal("<=")
-    elif current_token == ">":
-        match_terminal(">")
-    elif current_token == ">=":
-        match_terminal(">=")
-    elif current_token == "==":
-        match_terminal("==")
-    elif current_token == "!=":
-        match_terminal("!=")
-    else:
-        error("Error in relop")
-
-def arithmetic_expression_prime():
-    addop()
-    factor()
-    term_prime()
-    arithmetic_expression_prime()
-
-def addop():
-    if current_token == "+":
-        match_terminal("+")
-    elif current_token == "-":
-        match_terminal("-")
-    else:
-        error("Error in addop")
-
-def factor():
-    if current_token == "(":
-        match_terminal("(")
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        match_terminal(")")
-    elif is_type(current_token, TokenType.IDENTIFIER):
-        match_type(TokenType.IDENTIFIER)
-        factor_prime()
-    elif is_type(current_token, TokenType.INT):
-        match_type(TokenType.INT)
-    elif is_type(current_token, TokenType.FLOAT):
-        match_type(TokenType.FLOAT)
-    else:
-        error("Error in factor")
     
-def factor_prime():
-    if is_type(current_token, TokenType.IDENTIFIER):
-        match_type(TokenType.IDENTIFIER)
-        match_terminal("(")
-        args()
-        match_terminal(")")
-        match_terminal(";")
-    else:
-        var_prime()
+
+        
+    def is_type(self, token, type):
+        if token.type == type:
+            return True
+        return False
+
+    def error(self, e):
+        raise Exception(e)
+
+    def program(self):
+        print("program()")
+        self.declaration_list()
+        self.match_terminal("void")
+        self.match_type(TokenType.IDENTIFIER)
+        self.match_terminal("(")
+        self.match_terminal("void")
+        self.match_terminal(")")
+        self.match_terminal("{")
+        self.local_declarations()
+        self.statement_list()
+        self.match_terminal("return")
+        self.match_terminal(";")
+        self.match_terminal("}")
+
+    def declaration_list(self):
+        print("declaration_list()")
+        if self.get_current_token() in first_plus(['void']):
+            return
+        else:
+            self.declaration()
+            self.declaration_list()
+
+    def declaration(self):
+        print("declaration()")    
+        if self.get_current_token() == 'void':
+            self.match_terminal("void")
+            self.match_type(TokenType.IDENTIFIER)
+            self.match_terminal("(")
+            self.params()
+            self.match_terminal(")")
+            self.match_terminal("{")
+            self.local_declarations()
+            self.statement_list()
+            self.match_terminal("}")
+        else:
+            self.var_specifier()
+            self.match_type(TokenType.IDENTIFIER)
+            if self.get_current_token() == "(":
+                self.match_terminal("(")
+                self.params()
+                self.match_terminal(")")
+                self.match_terminal("{")
+                self.local_declarations()
+                self.statement_list()
+                self.match_terminal("}")
+            else:
+                 self.var_declaration_prime()
+
+    def var_declaration_prime(self):
+        print("var_declaration_prime()")
+        if self.get_current_token() == ";":
+            self.match_terminal(";")
+        elif self.get_current_token() == "[":
+            self.match_terminal("[")
+            self.match_terminal("int")
+            self.match_terminal("]")
+            self.match_terminal(";")
+        else:
+            self.error("Error in var_declaration_prime")
+
+    def var_specifier(self):
+        print("var_specifier()")
+        if self.get_current_token() == "int":
+            self.match_terminal("int")
+        elif self.get_current_token() == "float":
+            self.match_terminal("float")
+        elif self.get_current_token() == "string":
+            self.match_terminal("string")
+        else:
+            self.error("Error in var_specifier")
+        
+    def fun_specifier(self):
+        print("fun_specifier()")
+        if self.get_current_token() == "void":
+            self.match_terminal("void")
+        else:
+            self.var_specifier()
+
+    def params(self):
+        print("params()")
+        if self.get_current_token() == "void":
+            self.match_terminal("void")
+        else:
+            self.var_specifier()
+            self.match_type(TokenType.IDENTIFIER)
+            self.param_prime()
+            self.param_list_prime()
+
+    def param_list_prime(self):
+        print("param_list_prime()")
+        if self.get_current_token() == ",":
+            self.match_terminal(",")
+            self.var_specifier()
+            self.match_type(TokenType.IDENTIFIER)
+            self.param_prime()
+            self.param_list_prime()
+        elif self.get_current_token() in first_plus([')']):
+            return
+        else:
+            self.error("Error in param_list_prime")
+
+    def param_prime(self):
+        print("param_prime()")
+        if self.get_current_token() == "[":
+            self.match_terminal("[")
+            self.match_terminal("]")
+        elif self.get_current_token() in first_plus([',', ')']):
+            return
+        else:
+            self.error("Error in param_prime")
+
+    def local_declarations(self):
+        print("local_declarations()")
+        if self.get_current_token() in first_plus(['{', 'if', 'while', 'return', 'read', 'write', '}']):
+            return
+        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER):
+            return
+        self.var_specifier()
+        self.match_type(TokenType.IDENTIFIER)
+        self.var_declaration_prime()
+        self.local_declarations()
+
+    def statement_list(self):
+        print("statement_list()")
+        if self.get_current_token() in first_plus(['return', '{']):
+            return
+        self.statement()
+        self.statement_list()
+
+    def statement(self):
+        print("statement()")
+        if self.get_current_token() == "ID":
+            self.match_type(TokenType.IDENTIFIER)
+            self.statement_prime()
+        elif self.get_current_token() == "{":
+            self.match_terminal("{")
+            self.local_declarations()
+            self.statement_list()
+            self.match_terminal("}")
+        elif self.get_current_token() == "if":
+            self.match_terminal("if")
+            self.match_terminal("(")
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal(")")
+            self.statement()
+            self.selection_stmt_prime()
+        elif self.get_current_token() == "while":
+            self.match_terminal("while")
+            self.match_terminal("(")
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal(")")
+            self.statement()
+        elif self.get_current_token() == "return":
+            self.match_terminal("return")
+            self.return_stmt_prime()
+        elif self.get_current_token() == "read":
+            self.match_terminal("read")
+            self.match_type(TokenType.IDENTIFIER)
+            self.var_prime()
+            self.match_terminal(";")
+        elif self.get_current_token() == "write":
+            self.match_terminal("write")
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal(";")
+        else:
+            self.error("Error in statement")
+
+    def statement_prime(self):
+        print("statement_prime()")
+        if self.is_type(self.get_current_token(), TokenType.IDENTIFIER):
+            self.match_type(TokenType.IDENTIFIER)
+            self.match_terminal("(")
+            self.args()
+            self.match_terminal(")")
+            self.match_terminal(";")
+        else:
+            self.var_prime()
+            self.match_terminal("=")
+            self.assignment_stmt_prime()
+
+    def assignment_stmt_prime(self):
+        print("assignment_stmt_prime()")
+        if self.is_type(self.get_current_token(), TokenType.STRING):
+            self.match_type(TokenType.STRING)
+            self.match_terminal(";")
+        else:
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal(";")
+
+    def selection_stmt_prime(self):
+        print("selection_stmt_prime()")
+        if self.get_current_token() == "else":
+            self.match_terminal("else")
+            self.statement()
+        elif self.get_current_token() in first_plus(['{', 'if', 'while', 'return', 'read', 'write']):
+            return
+        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER):
+            return
+        else:
+            self.error("Error in selection_stmt_prime")
+
+    def return_stmt_prime(self):
+        print("return_stmt_prime()")
+        if self.get_current_token() == ";":
+            self.match_terminal(";")
+        else:
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal(";")
+
+    def output_stmt_prime(self):
+        print("output_stmt_prime()")
+        if self.is_type(self.get_current_token(), TokenType.STRING):
+            self.match_type(TokenType.STRING)
+            self.match_terminal(";")
+        else:
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal(";")
+
+    def var_prime(self):
+        print("var_prime()")
+        if self.get_current_token() == "[":
+            self.match_terminal("[")
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.expression_prime()
+            self.match_terminal("]")
+        elif self.get_current_token() in first_plus(['=', ';', '(', ')', ',', '+', '-', '*', '/', '<', '<=', '>', '>=', '==', '!=', ']']):
+            return
+        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER, TokenType.INT, TokenType.FLOAT):
+            return
+        else:
+            self.error("Error in var_prime")
+
+    def expression_prime(self):
+        print("expression_prime()")
+        if self.get_current_token() in first_plus([';', ')']):
+            return
+        self.relop()
+        self.factor()
+        self.term_prime()
+        self.arithmetic_expression_prime()
+
+    def relop(self):
+        print("relop()")
+        if self.get_current_token() == "<":
+            self.match_terminal("<")
+        elif self.get_current_token() == "<=":
+            self.match_terminal("<=")
+        elif self.get_current_token() == ">":
+            self.match_terminal(">")
+        elif self.get_current_token() == ">=":
+            self.match_terminal(">=")
+        elif self.get_current_token() == "==":
+            self.match_terminal("==")
+        elif self.get_current_token() == "!=":
+            self.match_terminal("!=")
+        else:
+            self.error("Error in relop")
+
+    def arithmetic_expression_prime(self):
+        print("arithmetic_expression_prime()")
+        if self.get_current_token() in first_plus(['=', ';', '(', ')', ',', '*', '/', '<', '<=', '>', '>=', '==', '!=', ']']):
+            return
+        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER, TokenType.INT, TokenType.FLOAT):
+            return
+        
+        self.addop()
+        self.factor()
+        self.term_prime()
+        self.arithmetic_expression_prime()
+
+    def addop(self):
+        print("addop()")
+        if self.get_current_token() == "+":
+            self.match_terminal("+")
+        elif self.get_current_token() == "-":
+            self.match_terminal("-")
+        else:
+            self.error("Error in addop")
+
+    def factor(self):
+        print("factor()")
+        if self.get_current_token() == "(":
+            self.match_terminal("(")
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.match_terminal(")")
+        elif self.is_type(self.get_current_token(), TokenType.IDENTIFIER):
+            self.match_type(TokenType.IDENTIFIER)
+            self.factor_prime()
+        elif self.is_type(self.get_current_token(), TokenType.INT):
+            self.match_type(TokenType.INT)
+        elif self.is_type(self.get_current_token(), TokenType.FLOAT):
+            self.match_type(TokenType.FLOAT)
+        else:
+            self.error("Error in factor")
     
-def term_prime():
-    mulop()
-    factor()
-    term_prime()
+    def factor_prime(self):
+        print("factor_prime()")
+        if self.is_type(self.get_current_token(), TokenType.IDENTIFIER):
+            self.match_type(TokenType.IDENTIFIER)
+            self.match_terminal("(")
+            self.args()
+            self.match_terminal(")")
+            self.match_terminal(";")
+        else:
+            self.var_prime()
+    
+    def term_prime(self):
+        print("term_prime()")
+        if self.get_current_token() in first_plus(['=', ';', '(', ')', ',', '+', '-', '<', '<=', '>', '>=', '==', '!=', ']']):
+            return
+        elif self.get_current_token().type in first_plus(TokenType.IDENTIFIER, TokenType.INT, TokenType.FLOAT):
+            return
+        self.mulop()
+        self.factor()
+        self.term_prime()
 
 
-def mulop():
-    if current_token == "*":
-        match_terminal("*")
-    elif current_token == "/":
-        match_terminal("/")
-    else:
-        error("Error in mulop")
+    def mulop(self):
+        print("mulop()")
+        if self.get_current_token() == "*":
+            self.match_terminal("*")
+        elif self.get_current_token() == "/":
+            self.match_terminal("/")
+        else:
+            self.error("Error in mulop")
 
-def args():
-    factor()
-    term_prime()
-    arithmetic_expression_prime()
-    args_list_prime()
+    def args(self):
+        print("args()")
+        if self.get_current_token() in first_plus([')']):
+            return
+        self.factor()
+        self.term_prime()
+        self.arithmetic_expression_prime()
+        self.args_list_prime()
 
-def args_list_prime():
-    if current_token == ",":
-        match_terminal(",")
-        factor()
-        term_prime()
-        arithmetic_expression_prime()
-        args_list_prime()
-    else:
-        error("Error in args_list_prime")
+    def args_list_prime(self):
+        print("args_list_prime()")
+        if self.get_current_token() == ",":
+            self.match_terminal(",")
+            self.factor()
+            self.term_prime()
+            self.arithmetic_expression_prime()
+            self.args_list_prime()
+        elif self.get_current_token() in first_plus([')']):
+            return
+        else:
+            self.error("Error in args_list_prime")
