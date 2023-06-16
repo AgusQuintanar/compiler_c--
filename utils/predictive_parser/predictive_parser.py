@@ -36,3 +36,7 @@ class PredictiveParser:
             print("Success")
         else:
             print("Error")
+            remaining_tokens = self.tokens[self.current_token :]
+            print("Remaining tokens")
+            for token in remaining_tokens:
+                print(token)

@@ -1,0 +1,176 @@
+int, TokenType.TERMINAL
+x, TokenType.IDENTIFIER
+;, TokenType.TERMINAL
+void, TokenType.TERMINAL
+main, TokenType.IDENTIFIER
+(, TokenType.TERMINAL
+void, TokenType.TERMINAL
+), TokenType.TERMINAL
+{, TokenType.TERMINAL
+int, TokenType.TERMINAL
+a, TokenType.IDENTIFIER
+;, TokenType.TERMINAL
+a, TokenType.IDENTIFIER
+=, TokenType.TERMINAL
+10, TokenType.INT
+;, TokenType.TERMINAL
+write, TokenType.TERMINAL
+x, TokenType.IDENTIFIER
+;, TokenType.TERMINAL
+return, TokenType.TERMINAL
+;, TokenType.TERMINAL
+}, TokenType.TERMINAL
+float, TokenType.TERMINAL
+y, TokenType.IDENTIFIER
+;, TokenType.TERMINAL
+$, TokenType.TERMINAL
+program()
+declaration_list()
+declaration()
+var_specifier()
+Matching terminal: int with int, TokenType.TERMINAL
+MATCHED
+
+Next token: x, TokenType.IDENTIFIER
+Matching type: TokenType.IDENTIFIER with TokenType.IDENTIFIER
+MATCHED
+
+Next token: ;, TokenType.TERMINAL
+var_declaration_prime()
+Matching terminal: ; with ;, TokenType.TERMINAL
+MATCHED
+
+Next token: void, TokenType.TERMINAL
+declaration_list()
+declaration()
+Matching terminal: void with void, TokenType.TERMINAL
+MATCHED
+
+Next token: main, TokenType.IDENTIFIER
+
+
+
+
+
+main
+
+
+
+
+
+Matching type: TokenType.IDENTIFIER with TokenType.IDENTIFIER
+MATCHED
+
+Next token: (, TokenType.TERMINAL
+Matching terminal: ( with (, TokenType.TERMINAL
+MATCHED
+
+Next token: void, TokenType.TERMINAL
+Matching terminal: void with void, TokenType.TERMINAL
+MATCHED
+
+Next token: ), TokenType.TERMINAL
+Matching terminal: ) with ), TokenType.TERMINAL
+MATCHED
+
+Next token: {, TokenType.TERMINAL
+Matching terminal: { with {, TokenType.TERMINAL
+MATCHED
+
+Next token: int, TokenType.TERMINAL
+local_declarations()
+var_specifier()
+Matching terminal: int with int, TokenType.TERMINAL
+MATCHED
+
+Next token: a, TokenType.IDENTIFIER
+Matching type: TokenType.IDENTIFIER with TokenType.IDENTIFIER
+MATCHED
+
+Next token: ;, TokenType.TERMINAL
+var_declaration_prime()
+Matching terminal: ; with ;, TokenType.TERMINAL
+MATCHED
+
+Next token: a, TokenType.IDENTIFIER
+local_declarations()
+statement_list()
+statement()
+Matching type: TokenType.IDENTIFIER with TokenType.IDENTIFIER
+MATCHED
+
+Next token: =, TokenType.TERMINAL
+statement_prime()
+var_prime()
+Matching terminal: = with =, TokenType.TERMINAL
+MATCHED
+
+Next token: 10, TokenType.INT
+assignment_stmt_prime()
+factor()
+Matching type: TokenType.INT with TokenType.INT
+MATCHED
+
+Next token: ;, TokenType.TERMINAL
+term_prime()
+arithmetic_expression_prime()
+expression_prime()
+Matching terminal: ; with ;, TokenType.TERMINAL
+MATCHED
+
+Next token: write, TokenType.TERMINAL
+statement_list()
+statement()
+Matching terminal: write with write, TokenType.TERMINAL
+MATCHED
+
+Next token: x, TokenType.IDENTIFIER
+factor()
+Matching type: TokenType.IDENTIFIER with TokenType.IDENTIFIER
+MATCHED
+
+Next token: ;, TokenType.TERMINAL
+factor_prime()
+var_prime()
+term_prime()
+arithmetic_expression_prime()
+expression_prime()
+Matching terminal: ; with ;, TokenType.TERMINAL
+MATCHED
+
+Next token: return, TokenType.TERMINAL
+statement_list()
+statement()
+Matching terminal: return with return, TokenType.TERMINAL
+MATCHED
+
+Next token: ;, TokenType.TERMINAL
+return_stmt_prime()
+Matching terminal: ; with ;, TokenType.TERMINAL
+MATCHED
+
+Next token: }, TokenType.TERMINAL
+statement_list()
+Matching terminal: } with }, TokenType.TERMINAL
+MATCHED
+
+Next token: float, TokenType.TERMINAL
+declaration_list()
+declaration()
+var_specifier()
+Matching terminal: float with float, TokenType.TERMINAL
+MATCHED
+
+Next token: y, TokenType.IDENTIFIER
+Matching type: TokenType.IDENTIFIER with TokenType.IDENTIFIER
+MATCHED
+
+Next token: ;, TokenType.TERMINAL
+var_declaration_prime()
+Matching terminal: ; with ;, TokenType.TERMINAL
+MATCHED
+
+Next token: $, TokenType.TERMINAL
+declaration_list()
+Regresa de mainnnnnn
+Success
